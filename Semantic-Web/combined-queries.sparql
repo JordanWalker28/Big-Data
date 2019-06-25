@@ -1,0 +1,87 @@
+//Combined SPARQL Queries using federated queries over two datasets.
+//query 1
+prefix cw2: <https://data.nasa.gov/ontologies/atmonto/NAS#>
+prefix loc: <https://data.nasa.gov/ontologies/atmonto/general#>
+
+SELECT ?name ?icao ?iata
+WHERE {
+  {SERVICE<http://localhost:3030/cw2/>
+    {?airport cw2:airportName ?name.
+              optional{?airport cw2:icaoAirportCode ?icao.}
+      			optional{?airport cw2:iataAirportCode ?iata.}
+              }}
+  UNION
+  {SERVICE <http://localhost:3030/nasa/>
+    {?airport2 cw2:airportName ?name.
+                optional{?airport2 cw2:icaoAirportCode ?icao.}
+      			optional{?airport2 cw2:iataAirportCode ?iata.}
+               }}
+}
+
+//query 2
+prefix cw2: <https://data.nasa.gov/ontologies/atmonto/NAS#>
+prefix loc: <https://data.nasa.gov/ontologies/atmonto/general#>
+
+SELECT ?name ?iata ?name1 ?iata1
+WHERE {
+    {?airport cw2:airportName ?name;
+              cw2:iataAirportCode ?iata.
+     }
+
+  {SERVICE <http://localhost:3030/nasa/>
+    {?airport2 cw2:airportName ?name1;
+     			cw2:iataAirportCode ?iata1.}
+  }
+} HAVING  (?iata = ?iata1 && ?name = ?name1)
+
+//Query 3 one way of doing this
+prefix cw2: <https://data.nasa.gov/ontologies/atmonto/NAS#>
+prefix loc: <https://data.nasa.gov/ontologies/atmonto/general#>
+
+SELECT ?name ?iatacode ?length ?alt
+WHERE {
+  {SERVICE<http://localhost:3030/cw2/>
+    {?airport cw2:airportName ?name.
+      ?airport cw2:iataAirportCode ?iata;
+
+	cw2:airportLocation ?loc.
+	?loc loc:altitude ?alt.
+
+      bind((?iata) as ?iatacode)
+
+    }}
+
+  {SERVICE <http://localhost:3030/nasa/>
+    {
+       ?airport2 cw2:iataAirportCode ?iatacode.
+      				?airport2 cw2:hasRunway ?assoc.
+            ?assoc cw2:runwayLengthInFeet ?length.
+
+               }}
+} order by desc (?alt) limit 10
+
+// Q3 with having to test equality takes a long time to run.
+prefix cw2: <https://data.nasa.gov/ontologies/atmonto/NAS#>
+prefix loc: <https://data.nasa.gov/ontologies/atmonto/general#>
+
+SELECT ?name ?iatacode ?iata ?length ?alt
+WHERE {
+  {SERVICE<http://localhost:3030/cw2/>
+    {?airport cw2:airportName ?name.
+      ?airport cw2:iataAirportCode ?iata;
+
+	cw2:airportLocation ?loc.
+	?loc loc:altitude ?alt.
+
+
+
+    }}
+
+  {SERVICE <http://localhost:3030/nasa/>
+    {
+       ?airport2 cw2:iataAirportCode ?iatacode.
+      				?airport2 cw2:hasRunway ?assoc.
+            ?assoc cw2:runwayLengthInFeet ?length.
+
+               }}
+} HAVING (?iata = ?iatacode) order by desc (?alt) limit 10

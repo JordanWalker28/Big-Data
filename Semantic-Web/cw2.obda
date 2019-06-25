@@ -1,0 +1,91 @@
+[PrefixDeclaration]
+:		https://data.nasa.gov/ontologies/atmonto/NAS#
+atm:		https://data.nasa.gov/ontologies/atmonto/ATM#
+doc:		https://data.nasa.gov/ontologies/atmonto/documentation#
+eqp:		https://data.nasa.gov/ontologies/atmonto/equipment#
+gen:		https://data.nasa.gov/ontologies/atmonto/general#
+nas:		https://data.nasa.gov/ontologies/atmonto/NAS#
+owl:		http://www.w3.org/2002/07/owl#
+rdf:		http://www.w3.org/1999/02/22-rdf-syntax-ns#
+xml:		http://www.w3.org/XML/1998/namespace
+xsd:		http://www.w3.org/2001/XMLSchema#
+data:		https://data.nasa.gov/ontologies/atmonto/data#
+rdfs:		http://www.w3.org/2000/01/rdf-schema#
+
+[SourceDeclaration]
+sourceUri	datasource1
+connectionUrl	jdbc:mysql://mysql-server-1.macs.hw.ac.uk/movielens
+username	dah3
+password	ap0ll0Creed
+driverClass	com.mysql.jdbc.Driver
+
+[MappingDeclaration] @collection [[
+mappingId	urn:MAPID-cce08439b2bb47bd930e8bd01b0c1697
+target		nas:airline{alid} a nas:AirCarrier . 
+source		select alid from airlines where alid >-1
+
+mappingId	urn:MAPID-c6ca4eb30afe42128dc77aaf82055829
+target		nas:airline{alid} nas:countryOfRegistry {name} . 
+source		SELECT al.alid, cr.name FROM airlines al, countries cr WHERE al.country = cr.code AND al.country is NOT NULL
+
+mappingId	urn:MAPID-1bb102a8a048499881ed62b5f9e7bfbd
+target		nas:airline{alid} nas:airlineCallsign {callsign} . 
+source		select alid, callsign from airlines where callsign is not null and callsign != ''
+
+mappingId	urn:MAPID-531c208997c64cf1b45e949a5ae2c5eb
+target		nas:airline{alid} nas:iataCarrierCode {iata} . 
+source		select alid, iata from airlines where iata is not null and iata !='' and iata !='-' and alid >-1
+
+mappingId	urn:MAPID-3d8bcb8cf6cc4b14bd5178182f48b707
+target		nas:airline{alid} nas:icaoCarrierCode {icao} . 
+source		select alid, icao from airlines where icao is not null and alid >-1 and icao!='' and icao !='-';
+
+mappingId	urn:MAPID-5eef990c26914d289eb50b326d0ddb92
+target		nas:airport{icao} a nas:Airport . 
+source		select icao from airports where icao is not null
+
+mappingId	urn:MAPID-95b37971a789472f963961aaf22d48b5
+target		nas:airport{icao} nas:iataAirportCode {iata} . 
+source		select icao, iata from airports where iata is not null and icao is not null
+
+mappingId	urn:MAPID-a8c3f2bcfeb747c689c3d52860274787
+target		nas:{icao}coordinates a gen:PointLocation . 
+source		select icao from airports where icao is not null
+
+mappingId	urn:MAPID-9b2d3597a4aa47079bc9dd70816f6c99
+target		nas:airline{alid} rdfs:label {name} . 
+source		select name, alid from airlines where name is not null and alid >-1
+
+mappingId	urn:MAPID-74c9a28cfbb34fc29d4d2154f0db3203
+target		nas:airline{alid} nas:airCarrierName {name} . 
+source		select name, alid from airlines where name is not null and alid >-1
+
+mappingId	urn:MAPID-718d5af65c8044bbae85d88ebc1d1fb6
+target		nas:airport{icao} rdfs:label {name} . 
+source		select icao, name from airports where name is not null
+
+mappingId	urn:MAPID-2765c66587ac43a69859df4a859346b9
+target		nas:airport{icao} nas:airportName {name} . 
+source		select icao, name from airports where name is not null
+
+mappingId	urn:MAPID-0806a7a96a454dbfafc92a649513d19b
+target		nas:airport{icao} nas:icaoAirportCode {icao} . 
+source		select icao from airports where icao is not null
+
+mappingId	urn:MAPID-d947d7ba6b7c46f6ada944a408766ebe
+target		nas:airport{icao} nas:airportLocation nas:{icao}coordinates . 
+source		select icao from airports where icao is not null
+
+mappingId	urn:MAPID-15364c1a72704c3a9a9eaa78fd05c672
+target		nas:{icao}coordinates gen:latitude {y}^^xsd:double . 
+source		select icao, y from airports where icao is not null and y is not null
+
+mappingId	urn:MAPID-e40a53a10f1c4c978bf9457fe47d280b
+target		nas:{icao}coordinates gen:longitude {x}^^xsd:double . 
+source		select icao, x from airports where icao is not null and x is not null
+
+mappingId	urn:MAPID-05f9db071d5847f99801ff62b9af4b04
+target		nas:{icao}coordinates gen:altitude {elevation}^^xsd:integer . 
+source		select icao, elevation from airports where icao is not null and elevation is not null
+]]
+

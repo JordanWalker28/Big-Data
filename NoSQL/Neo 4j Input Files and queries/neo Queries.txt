@@ -1,0 +1,37 @@
+//load in non foreign key properties first, relationships will be made later
+LOAD CSV WITH HEADERS FROM "file:///track.csv" AS row CREATE (track:Track{TrackId: TOINT(row.TrackId)}) SET track.Name = row.Name, track.Composer = row.Composer, track.Milliseconds =  TOINT(row.Milliseconds), track.Bytes = TOINT(row.Bytes), track.UnitPrice = TOFLOAT(row.UnitPrice) return track;
+
+LOAD CSV WITH HEADERS FROM "file:///genre.csv" AS row CREATE (genre:Genre{GenreId: TOINT(row.GenreId)}) SET genre.Name = row.Name return genre;
+
+LOAD CSV WITH HEADERS FROM "file:///album.csv" AS row CREATE (album:Album{AlbumId: TOINT(row.AlbumId)}) SET album.Title = row.Title return album;
+
+LOAD CSV WITH HEADERS FROM "file:///artist.csv" AS row CREATE (artist:Artist{ArtistId: TOINT(row.ArtistId)}) SET artist.Name = row.Name return artist;
+
+LOAD CSV WITH HEADERS FROM "file:///media.csv" AS row CREATE (mediatype:MediaType{MediaTypeId: TOINT(row.MediaTypeId)}) SET mediatype.Name = row.Name return mediatype;
+
+LOAD CSV WITH HEADERS FROM "file:///employee.csv" AS row CREATE (employee:Employee{EmployeeId: TOINT(row.EmployeeId)}) SET employee.LastName = row.LastName, employee.FirstName = row.FirstName, employee.Title = row.Title,employee.ReportsTo=row.ReportsTo ,employee.BirthDate = row.BirthDate, employee.HireDate = row.HireDate, employee.Address = row.Address, employee.City = row.City, employee.State = row.State, employee.Country = row.Country, employee.PostalCode = row.PostalCode, employee.Phone = row.Phone, employee.Fax=row.Fax, employee.Email=row.Email return employee;
+
+LOAD CSV WITH HEADERS FROM "file:///customer.csv" AS row CREATE (customer:Customer{CustomerId: TOINT(row.CustomerId)}) SET customer.FirstName = row.FirstName, customer.LastName = row.LastName, customer.Company = row.Company,customer.Address = row.Address, customer.City = row.City, customer.State = row.State, customer.Country = row.Country, customer.PostalCode = row.PostalCode, customer.Phone = row.Phone, customer.Fax=row.Fax, customer.Email=row.Email
+
+LOAD CSV WITH HEADERS FROM "file:///invoice.csv" AS row CREATE (invoice:Invoice{InvoiceId: TOINT(row.InvoiceId)}) SET invoice.InvoiceData = row.InvoiceDate, invoice.BillingAddress = row.BillingAddress, invoice.BillingCity = row.BillingCity, invoice.BillingState = row.BillingState, invoice.BillingCountry = row.BillingCountry, invoice.BillingPostalCode = row.BillingPostalCode, invoice.Total = TOFLOAT(row.Total)
+
+LOAD CSV WITH HEADERS FROM "file:///playlist.csv" AS row CREATE (playlist:Playlist{PlaylistId: TOINT(row.PlaylistId)}) SET playlist.Name = row.Name return playlist;
+
+//relationships
+LOAD CSV WITH HEADERS FROM "file:///track.csv" AS row MATCH(track:Track{TrackId: TOINT(row.TrackId)}) MATCH(genre:Genre {GenreId: TOINT(row.GenreId)}) CREATE (track)-[:IS_GENRE_OF]->(genre)
+
+LOAD CSV WITH HEADERS FROM "file:///track.csv" AS row MATCH(track:Track{TrackId: TOINT(row.TrackId)}) MATCH(album:Album {AlbumId: TOINT(row.AlbumId)}) CREATE (track)-[:BELONGS_TO]->(album)
+
+LOAD CSV WITH HEADERS FROM "file:///album.csv" AS row MATCH(album:Album{AlbumId: TOINT(row.AlbumId)}) MATCH(artist:Artist {ArtistId: TOINT(row.ArtistId)}) CREATE (album)-[:CREATED_BY]->(artist)
+
+LOAD CSV WITH HEADERS FROM "file:///track.csv" AS row MATCH(track:Track{TrackId: TOINT(row.TrackId)}) MATCH(mediatype:MediaType {MediaTypeId: TOINT(row.MediaTypeId)}) CREATE (track)-[:HAS]->(mediatype)
+
+LOAD CSV WITH HEADERS FROM "file:///invoice.csv" AS row MATCH(invoice:Invoice{InvoiceId: TOINT(row.InvoiceId)}) MATCH(customer:Customer{CustomerId: TOINT(row.CustomerId)}) CREATE (invoice)-[:SENT_TO]->(customer)
+
+LOAD CSV WITH HEADERS FROM "file:///customer.csv" AS row MATCH(customer:Customer{CustomerId: TOINT(row.CustomerId)}) MATCH(employee:Employee {EmployeeId: TOINT(row.SupportRepId)}) CREATE (customer)-[:SUPPORTED_BY]->(employee) RETURN customer,employee;
+
+LOAD CSV WITH HEADERS FROM "file:///employee.csv" AS row MATCH(employee:Employee{EmployeeId: TOINT(row.EmployeeId)}) MATCH(supervisor:Employee {EmployeeId: TOINT(row.ReportsTo)}) CREATE (employee)-[:SUPERVISED_BY]->(supervisor) RETURN employee,supervisor;
+
+LOAD CSV WITH HEADERS FROM "file:///PlaylistTrack.csv" AS row MATCH (playlist:Playlist {PlaylistId: TOINT(row.PlaylistId)}) MATCH (track:Track {TrackId: TOINT(row.TrackId)}) CREATE (playlist)-[:CONTAINS_TRACK]->(track)
+
+LOAD CSV WITH HEADERS FROM "file:///InvoiceLine.csv" AS row MATCH (invoice:Invoice {InvoiceId: TOINT(row.InvoiceId)}) MATCH (track:Track {TrackId: TOINT(row.TrackId)}) CREATE (invoice)-[i:INVOICE_CONTAINS_TRACK]->(track) SET i.UnitPrice=TOFLOAT(row.UnitPrice), i.Quantity=TOINT(row.Quantity)
